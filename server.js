@@ -5,7 +5,23 @@ import foodRouter from "./routes/foodRoute.js"
 import userRouter from "./routes/userRoute.js"
 import 'dotenv/config' 
 import cartRouter from "./routes/cartRoute.js"
+import { createClient } from 'redis';
 import orderRouter from "./routes/orderRoute.js"
+
+const redisClient = createClient({
+    url: process.env.REDIS_URL
+});
+
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
+
+(async () => {
+    try {
+        await redisClient.connect();  // Connect the Redis client, must be in an async context
+        console.log('Connected to Redis');
+    } catch (error) {
+        console.error('Failed to connect to Redis', error);
+    }
+})();
 
 // app config
 const app = express()
@@ -32,5 +48,7 @@ app.get("/",(req,res)=>{
 app.listen(process.env.PORT,()=>{
     console.log(`Server is running on PORT ${PORT}`)
 })
+
+export default redisClient;
 
 //mongodb+srv://tarunnemali2004:Iamtarun2004@cluster0.cdklqgg.mongodb.net/?

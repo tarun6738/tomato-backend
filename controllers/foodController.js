@@ -1,6 +1,6 @@
 import foodModel from "../models/foodModel.js";
 import fs from "fs"
-
+import redisClient from "../server.js";
 // add food Item
 
 const addFood = async(req,res) => {
@@ -22,9 +22,17 @@ const addFood = async(req,res) => {
 }
 
 const listFood = async(req,res) => {
+    const cacheKey = 'allFoods';
     try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            return res.json({ success: true, data: JSON.parse(cachedData) });
+        }
         const foods = await foodModel.find({});
-        res.json({success:true,data:foods});
+        await redisClient.set(cacheKey, JSON.stringify(foods), {
+            EX: 3600
+        });
+        res.json({ success: true, data: foods });
     } catch (error) {
         console.log(error);
         res.json({success:false,message:"error"})
